@@ -1,21 +1,5 @@
 import { Card } from "@/components/ui/card";
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  price: number;
-}
-
-interface InvoiceData {
-  companyName: string;
-  companyLogo: string;
-  clientName: string;
-  clientEmail: string;
-  date: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  notes: string;
-}
+import { InvoiceData } from "@/types/invoice";
 
 interface Props {
   data: InvoiceData;

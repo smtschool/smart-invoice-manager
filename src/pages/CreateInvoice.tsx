@@ -3,26 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, Upload, Printer } from "lucide-react";
+import { Plus, Trash2, Upload, Printer, Save } from "lucide-react";
 import InvoicePreview from "@/components/InvoicePreview";
 import { useToast } from "@/components/ui/use-toast";
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  price: number;
-}
-
-interface InvoiceData {
-  companyName: string;
-  companyLogo: string;
-  clientName: string;
-  clientEmail: string;
-  date: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  notes: string;
-}
+import { InvoiceData, InvoiceItem } from "@/types/invoice";
+import { saveInvoice } from "@/services/invoiceStorage";
+import { printInvoice } from "@/utils/printUtils";
 
 const CreateInvoice = () => {
   const { toast } = useToast();
@@ -32,7 +18,9 @@ const CreateInvoice = () => {
     clientName: "",
     clientEmail: "",
     date: new Date().toISOString().split("T")[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
     items: [{ description: "", quantity: 1, price: 0 }],
     notes: "",
   });
@@ -41,9 +29,9 @@ const CreateInvoice = () => {
   useEffect(() => {
     const savedCompanyName = localStorage.getItem("companyName");
     const savedCompanyLogo = localStorage.getItem("companyLogo");
-    
+
     if (savedCompanyName || savedCompanyLogo) {
-      setInvoiceData(prev => ({
+      setInvoiceData((prev) => ({
         ...prev,
         companyName: savedCompanyName || "",
         companyLogo: savedCompanyLogo || "",
@@ -89,15 +77,26 @@ const CreateInvoice = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    printInvoice();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Invoice Created",
-      description: "Your invoice has been saved successfully.",
-    });
+    try {
+      const savedInvoice = saveInvoice(invoiceData);
+      console.log('Invoice saved successfully:', savedInvoice);
+      toast({
+        title: "Invoice Saved",
+        description: "Your invoice has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving invoice:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save invoice. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -247,7 +246,10 @@ const CreateInvoice = () => {
                   <Printer className="h-4 w-4 mr-2" />
                   Print Invoice
                 </Button>
-                <Button type="submit">Save Invoice</Button>
+                <Button type="submit">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Invoice
+                </Button>
               </div>
             </form>
           </div>
