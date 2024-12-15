@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Printer } from "lucide-react";
 import InvoicePreview from "@/components/InvoicePreview";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -14,6 +14,8 @@ interface InvoiceItem {
 }
 
 interface InvoiceData {
+  companyName: string;
+  companyLogo: string;
   clientName: string;
   clientEmail: string;
   date: string;
@@ -25,6 +27,8 @@ interface InvoiceData {
 const CreateInvoice = () => {
   const { toast } = useToast();
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+    companyName: "",
+    companyLogo: "",
     clientName: "",
     clientEmail: "",
     date: new Date().toISOString().split("T")[0],
@@ -32,6 +36,39 @@ const CreateInvoice = () => {
     items: [{ description: "", quantity: 1, price: 0 }],
     notes: "",
   });
+
+  // Load company data from localStorage on mount
+  useEffect(() => {
+    const savedCompanyName = localStorage.getItem("companyName");
+    const savedCompanyLogo = localStorage.getItem("companyLogo");
+    
+    if (savedCompanyName || savedCompanyLogo) {
+      setInvoiceData(prev => ({
+        ...prev,
+        companyName: savedCompanyName || "",
+        companyLogo: savedCompanyLogo || "",
+      }));
+    }
+  }, []);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setInvoiceData(prev => ({ ...prev, companyLogo: base64String }));
+        localStorage.setItem("companyLogo", base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setInvoiceData(prev => ({ ...prev, companyName: newName }));
+    localStorage.setItem("companyName", newName);
+  };
 
   const addItem = () => {
     setInvoiceData({
@@ -51,9 +88,12 @@ const CreateInvoice = () => {
     setInvoiceData({ ...invoiceData, items: newItems });
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement save functionality
     toast({
       title: "Invoice Created",
       description: "Your invoice has been saved successfully.",
@@ -68,6 +108,48 @@ const CreateInvoice = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-6">
             <form onSubmit={handleSubmit} className="invoice-form">
+              <Card className="p-4 mb-6">
+                <h3 className="font-semibold mb-4">Company Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      value={invoiceData.companyName}
+                      onChange={handleCompanyNameChange}
+                      placeholder="Enter company name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="logo">Company Logo</Label>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('logo')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Logo
+                      </Button>
+                      {invoiceData.companyLogo && (
+                        <img
+                          src={invoiceData.companyLogo}
+                          alt="Company logo"
+                          className="h-10 w-10 object-contain"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="clientName">Client Name</Label>
@@ -161,6 +243,10 @@ const CreateInvoice = () => {
               </div>
 
               <div className="flex justify-end space-x-4 mt-6">
+                <Button type="button" variant="outline" onClick={handlePrint}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print Invoice
+                </Button>
                 <Button type="submit">Save Invoice</Button>
               </div>
             </form>

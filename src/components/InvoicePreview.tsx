@@ -7,6 +7,8 @@ interface InvoiceItem {
 }
 
 interface InvoiceData {
+  companyName: string;
+  companyLogo: string;
   clientName: string;
   clientEmail: string;
   date: string;
@@ -32,12 +34,26 @@ const InvoicePreview = ({ data }: Props) => {
   };
 
   return (
-    <Card className="invoice-preview animate-fade-in">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">INVOICE</h2>
-        <div className="mt-4 text-sm text-gray-600">
-          <p>Date: {data.date}</p>
-          <p>Due Date: {data.dueDate}</p>
+    <Card className="invoice-preview animate-fade-in p-8">
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          {data.companyLogo && (
+            <img
+              src={data.companyLogo}
+              alt="Company logo"
+              className="h-16 w-16 object-contain mb-2"
+            />
+          )}
+          {data.companyName && (
+            <h3 className="text-xl font-bold text-gray-900">{data.companyName}</h3>
+          )}
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">INVOICE</h2>
+          <div className="mt-4 text-sm text-gray-600">
+            <p>Date: {data.date}</p>
+            <p>Due Date: {data.dueDate}</p>
+          </div>
         </div>
       </div>
 
